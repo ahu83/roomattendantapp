@@ -281,17 +281,25 @@ function showToast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show
 function isConfigured(){return !!SCRIPT_URL;}
 
 function api(payload,cb){
-  if(!isConfigured()){cb({status:'error',message:'Script URL not set.'});return;}
+  if(!isConfigured()){hideLoading();cb({status:'error',message:'Script URL not set.'});return;}
   fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)})
-    .then(function(r){return r.json();}).then(cb)
-    .catch(function(e){cb({status:'error',message:e.toString()});});
+    .then(function(r){return r.json();})
+    .then(function(res){hideLoading();cb(res);})
+    .catch(function(e){hideLoading();cb({status:'error',message:e.toString()});});
 }
 function apiGet(params,cb){
-  if(!isConfigured()){cb({status:'error',message:'Script URL not set.'});return;}
+  if(!isConfigured()){hideLoading();cb({status:'error',message:'Script URL not set.'});return;}
   var qs=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
   fetch(SCRIPT_URL+'?'+qs)
-    .then(function(r){return r.json();}).then(cb)
-    .catch(function(e){cb({status:'error',message:e.toString()});});
+    .then(function(r){
+      return r.text().then(function(txt){
+        console.log('RAW RESPONSE:', txt.substring(0,500));
+        try{return JSON.parse(txt);}
+        catch(e){return {status:'error',message:'Bad JSON from server: '+txt.substring(0,300)};}
+      });
+    })
+    .then(function(res){hideLoading();cb(res);})
+    .catch(function(e){hideLoading();cb({status:'error',message:e.toString()});});
 }
 
 function loadAttendantsForLogin(){
@@ -396,9 +404,8 @@ function loadMyEntries(){
   var date=gval('meta-date')||today();
   showLoading('Loading your entries...');
   apiGet({action:'getEntries',date:date,attendant:currentUser.name},function(res){
-    hideLoading();
     if(res.status==='ok'){renderMyEntries(res.entries||[]);}
-    else{$('my-body').innerHTML='<div class="empty-state"><div class="em">⚠️</div><p>Could not load. Check your connection.</p></div>';}
+    else{$('my-body').innerHTML='<div class="empty-state"><div class="em">⚠️</div><p>Error: '+(res.message||'Could not load.')+'</p></div>';}
   });
 }
 
@@ -413,9 +420,8 @@ function loadManagerEntries(){
   var date=gval('mgr-date-filter')||today();
   showLoading('Loading entries for '+fmtDate(date)+'...');
   apiGet({action:'getEntries',date:date},function(res){
-    hideLoading();
     if(res.status==='ok'){allManagerEntries=res.entries||[];activeFilter='all';renderManagerEntries();}
-    else{$('mgr-body').innerHTML='<div class="empty-state"><div class="em">⚠️</div><p>Could not load entries.</p></div>';}
+    else{$('mgr-body').innerHTML='<div class="empty-state"><div class="em">⚠️</div><p>Error: '+(res.message||'Could not load entries.')+'</p></div>';}
   });
 }
 
@@ -454,7 +460,6 @@ function deleteEntry(id){
   if(!confirm('Remove this entry?'))return;
   showLoading('Removing...');
   api({action:'deleteEntry',id:id},function(res){
-    hideLoading();
     if(res.status==='ok'){showToast('Entry removed.');if(currentUser.role==='manager')loadManagerEntries();else loadMyEntries();}
     else{showToast('Error: could not remove.');}
   });
@@ -464,7 +469,6 @@ function clearAll(){
   if(!confirm('Clear ALL entries from Google Sheets? This cannot be undone.'))return;
   showLoading('Clearing all entries...');
   api({action:'clearAll'},function(res){
-    hideLoading();
     if(res.status==='ok'){allManagerEntries=[];renderManagerEntries();showToast('All entries cleared.');}
   });
 }
@@ -472,7 +476,6 @@ function clearAll(){
 function loadStaff(){
   showLoading('Loading staff...');
   apiGet({action:'getAttendants'},function(res){
-    hideLoading();
     if(res.status==='ok'){ATTENDANTS=res.attendants;renderStaff();}
   });
 }
@@ -493,7 +496,6 @@ function addStaff(){
   if(!name){msg.className='staff-msg err';msg.textContent='Please enter a name.';return;}
   showLoading('Adding attendant...');
   api({action:'addAttendant',name:name},function(res){
-    hideLoading();
     if(res.status==='ok'){
       $('new-staff-name').value='';
       msg.className='staff-msg ok';msg.textContent='✅ '+name+' added.';
@@ -506,7 +508,6 @@ function deleteStaff(name){
   if(!confirm('Remove '+name+' from the attendant list?'))return;
   showLoading('Removing...');
   api({action:'deleteAttendant',name:name},function(res){
-    hideLoading();
     if(res.status==='ok'){showToast(name+' removed.');loadStaff();}
     else{showToast('Error: could not remove.');}
   });
