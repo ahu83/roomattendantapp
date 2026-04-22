@@ -282,7 +282,8 @@ function isConfigured(){return !!SCRIPT_URL;}
 
 function api(payload,cb){
   if(!isConfigured()){hideLoading();cb({status:'error',message:'Script URL not set.'});return;}
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)})
+  var qs=Object.keys(payload).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(payload[k]===undefined||payload[k]===null?'':payload[k]);}).join('&');
+  fetch(SCRIPT_URL+'?'+qs)
     .then(function(r){
       return r.text().then(function(txt){
         console.log('POST RAW RESPONSE:', txt.substring(0,500));
