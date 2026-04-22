@@ -148,7 +148,6 @@ header{background:var(--navy);padding:15px 18px;display:flex;align-items:center;
         <input type="password" id="mgr-pin" placeholder="Enter PIN" inputmode="numeric" maxlength="6">
       </div>
       <button class="login-btn" onclick="loginManager()">Login as Manager →</button>
-      <p class="pin-hint">Default PIN: <strong>1234</strong></p>
     </div>
     <div class="login-err" id="login-err"></div>
   </div>
@@ -267,7 +266,7 @@ var activeFilter = 'all';
 var currentMgrTab = 'entries';
 var allManagerEntries = [];
 var ATTENDANTS = [];
-const MANAGER_PIN = '1234';
+const MANAGER_PIN = '3220';
 
 function today(){var d=new Date();return d.getFullYear()+'-'+(''+(d.getMonth()+1)).padStart(2,'0')+'-'+(''+(d.getDate())).padStart(2,'0');}
 function fmtDate(d){if(!d)return '';var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
