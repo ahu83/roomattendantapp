@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Room Attendant Daily Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--navy:#0f2140;--navy2:#1a3560;--gold:#c9a84c;--gold-light:#e8c97a;--cream:#faf8f3;--white:#ffffff;--border:#ddd5c0;--text:#1a1a2e;--muted:#7a7060;--danger:#c0392b;--success:#1e6b45;--ih:48px;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;}
+header{background:var(--navy);padding:15px 18px;display:flex;align-items:center;gap:12px;border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:100;}
+.hdr-icon{width:40px;height:40px;background:var(--gold);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.hdr-text h1{font-family:'Playfair Display',serif;color:#fff;font-size:1rem;line-height:1.25;}
+.hdr-text p{color:var(--gold-light);font-size:0.62rem;font-weight:300;letter-spacing:.07em;margin-top:2px;}
+.hdr-right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.hdr-who{color:var(--gold-light);font-size:.71rem;font-weight:500;}
+.logout-btn{background:rgba(255,255,255,.1);border:1px solid rgba(201,168,76,.4);color:var(--gold);border-radius:6px;padding:4px 10px;font-size:.68rem;cursor:pointer;font-family:inherit;}
+#login-screen{min-height:calc(100vh - 75px);display:flex;align-items:center;justify-content:center;padding:24px 18px;}
+.login-card{background:var(--white);border:1px solid var(--border);border-radius:18px;padding:28px 22px;width:100%;max-width:380px;box-shadow:0 4px 28px rgba(15,33,64,.11);}
+.login-card h2{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--navy);margin-bottom:5px;}
+.login-sub{color:var(--muted);font-size:.83rem;margin-bottom:24px;}
+.login-tabs{display:flex;background:var(--cream);border-radius:10px;padding:4px;margin-bottom:22px;}
+.ltab{flex:1;padding:10px;text-align:center;border-radius:7px;font-size:.84rem;font-weight:600;cursor:pointer;border:none;background:none;color:var(--muted);font-family:inherit;transition:all .2s;}
+.ltab.active{background:var(--navy);color:var(--gold);}
+.lf{margin-bottom:14px;}
+.lf label{display:block;font-size:.69rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.lf select,.lf input{width:100%;height:var(--ih);border:1.5px solid var(--border);border-radius:10px;padding:0 14px;font-family:inherit;font-size:.95rem;color:var(--text);background:var(--cream);outline:none;transition:border-color .2s;-webkit-appearance:none;}
+.lf select:focus,.lf input:focus{border-color:var(--gold);background:var(--white);}
+.login-btn{width:100%;height:52px;background:var(--navy);color:var(--gold);border:none;border-radius:12px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;margin-top:6px;}
+.login-btn:active{background:var(--navy2);}
+.login-err{color:var(--danger);font-size:.82rem;margin-top:10px;min-height:18px;text-align:center;}
+.pin-hint{font-size:.72rem;color:var(--muted);text-align:center;margin-top:9px;}
+#app-screen{display:none;padding-bottom:80px;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;margin:14px 14px 0;padding:18px 16px;box-shadow:0 2px 8px rgba(15,33,64,.06);}
+.card-title{font-family:'Playfair Display',serif;font-size:1rem;color:var(--navy);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;}
+.ci{background:var(--navy);color:var(--gold);border-radius:6px;width:25px;height:25px;display:flex;align-items:center;justify-content:center;font-size:.78rem;flex-shrink:0;}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.field label{font-size:.68rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);}
+.field input,.field select,.field textarea{height:var(--ih);border:1.5px solid var(--border);border-radius:10px;padding:0 13px;font-family:inherit;font-size:.95rem;color:var(--text);background:var(--cream);outline:none;width:100%;transition:border-color .2s;-webkit-appearance:none;}
+.field textarea{height:auto;min-height:68px;padding:11px 13px;resize:none;line-height:1.5;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold);background:var(--white);}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.r2b{display:grid;grid-template-columns:1fr 1.5fr;gap:11px;}
+.sep{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:4px 0 11px;display:flex;align-items:center;gap:8px;}
+.sep::after{content:'';flex:1;height:1px;background:var(--border);}
+.err-msg{color:var(--danger);font-size:.81rem;margin:5px 0;min-height:17px;}
+.btn-add{width:100%;height:52px;background:var(--navy);color:var(--gold);border:none;border-radius:12px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;}
+.btn-add:disabled{background:#aaa;cursor:not-allowed;}
+.btn-export{background:var(--success);color:#fff;width:100%;height:52px;border:none;border-radius:12px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-export:disabled{background:#aaa;cursor:not-allowed;}
+.btn-clear{background:none;border:1.5px solid #c0a89a;color:var(--danger);width:100%;height:46px;border-radius:12px;font-family:inherit;font-size:.9rem;font-weight:600;cursor:pointer;margin-top:10px;}
+.e-header{background:var(--navy);border-radius:13px 13px 0 0;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin:16px 14px 0;}
+.e-header h2{color:#fff;font-family:'Playfair Display',serif;font-size:.93rem;}
+.badge{background:var(--gold);color:var(--navy);border-radius:20px;padding:3px 12px;font-size:.73rem;font-weight:700;}
+.e-body{margin:0 14px;border:1px solid var(--border);border-top:none;border-radius:0 0 13px 13px;overflow:hidden;background:var(--white);}
+.eitem{padding:14px 15px;border-bottom:1px solid var(--border);}
+.eitem:last-child{border-bottom:none;}
+.etop{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:9px;}
+.evilla{font-weight:700;font-size:1.05rem;color:var(--navy);}
+.ewho{font-size:.72rem;color:var(--muted);margin-top:2px;}
+.estatus{font-size:.75rem;font-weight:700;padding:4px 11px;border-radius:20px;white-space:nowrap;flex-shrink:0;margin-left:8px;}
+.s-occ{background:#e8f5ee;color:#1e6b45;}.s-vm{background:#e8f0fa;color:#2c5fa8;}.s-va{background:#fef5e8;color:#8b4a00;}.s-dnd{background:#f3eafa;color:#7a3fa8;}.s-ref{background:#fdecea;color:#c0392b;}.s-ns{background:#f0f0f0;color:#666;}
+.etimes{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px;}
+.tb{background:var(--cream);border-radius:8px;padding:7px 10px;}
+.tbl{font-size:.64rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
+.tbv{font-size:.88rem;font-weight:600;color:var(--text);margin-top:2px;}
+.eremarks{font-size:.81rem;color:var(--muted);background:#fffbf2;border:1px solid #ede3c8;border-radius:8px;padding:7px 11px;margin-bottom:6px;}
+.eremarks b{color:var(--text);}
+.efoot{display:flex;align-items:center;justify-content:space-between;margin-top:5px;}
+.edate{font-size:.73rem;color:var(--muted);}
+.del-btn{background:none;border:1px solid #e0c4c0;color:var(--danger);border-radius:6px;padding:4px 11px;font-size:.72rem;cursor:pointer;font-family:inherit;}
+.empty-state{padding:36px 20px;text-align:center;color:var(--muted);}
+.empty-state .em{font-size:2rem;margin-bottom:8px;}
+.empty-state p{font-size:.86rem;}
+.mgr-badge{display:flex;align-items:center;gap:7px;background:#fff8e8;border:1.5px solid var(--gold);border-radius:10px;padding:9px 14px;font-size:.79rem;color:#7a5a10;font-weight:600;margin:14px 14px 0;}
+.mgr-tabs{display:flex;background:var(--cream);border-radius:10px;padding:4px;margin:14px 14px 0;}
+.mgr-tab{flex:1;padding:10px;text-align:center;border-radius:7px;font-size:.84rem;font-weight:600;cursor:pointer;border:none;background:none;color:var(--muted);font-family:inherit;transition:all .2s;}
+.mgr-tab.active{background:var(--navy);color:var(--gold);}
+.date-filter-bar{margin:12px 14px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.date-filter-bar label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.date-filter-bar input[type="date"]{height:44px;border:1.5px solid var(--border);border-radius:10px;padding:0 12px;font-family:inherit;font-size:.9rem;background:var(--white);color:var(--text);outline:none;-webkit-appearance:none;flex:1;}
+.date-filter-bar input[type="date"]:focus{border-color:var(--gold);}
+.btn-load{height:44px;background:var(--navy);color:var(--gold);border:none;border-radius:10px;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;padding:0 18px;white-space:nowrap;}
+.fbar{margin:12px 14px 0;display:flex;gap:7px;flex-wrap:wrap;}
+.fc{padding:7px 14px;border-radius:20px;font-size:.77rem;font-weight:600;border:1.5px solid var(--border);background:var(--white);color:var(--muted);cursor:pointer;font-family:inherit;}
+.fc.active{background:var(--navy);color:var(--gold);border-color:var(--navy);}
+.staff-list-wrap{margin:0 14px;border:1px solid var(--border);border-radius:0 0 13px 13px;overflow:hidden;background:var(--white);}
+.staff-item{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--border);}
+.staff-item:last-child{border-bottom:none;}
+.staff-name{font-weight:600;font-size:.95rem;color:var(--navy);}
+.add-staff-row{display:flex;gap:10px;}
+.add-staff-row input{flex:1;height:var(--ih);border:1.5px solid var(--border);border-radius:10px;padding:0 13px;font-family:inherit;font-size:.95rem;color:var(--text);background:var(--cream);outline:none;-webkit-appearance:none;}
+.add-staff-row input:focus{border-color:var(--gold);}
+.add-staff-btn{flex-shrink:0;height:var(--ih);background:var(--navy);color:var(--gold);border:none;border-radius:10px;font-family:inherit;font-size:.88rem;font-weight:700;cursor:pointer;padding:0 20px;}
+.staff-msg{font-size:.8rem;margin-top:8px;min-height:18px;}
+.staff-msg.ok{color:var(--success);}.staff-msg.err{color:var(--danger);}
+.loading{position:fixed;inset:0;background:rgba(15,33,64,.55);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:14px;}
+.loading p{color:#fff;font-size:.9rem;font-weight:600;}
+.spinner{width:38px;height:38px;border:3px solid rgba(201,168,76,.3);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy);color:var(--gold-light);padding:12px 24px;border-radius:30px;font-size:.87rem;font-weight:600;z-index:9998;transition:transform .3s ease;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.setup-banner{background:#fff3cd;border:1.5px solid #ffc107;border-radius:10px;padding:14px 16px;margin:14px 14px 0;font-size:.82rem;color:#7a5a10;line-height:1.7;}
+.setup-banner strong{display:block;font-size:.9rem;margin-bottom:6px;}
+.setup-banner ol{padding-left:18px;}
+.setup-banner code{background:rgba(0,0,0,.08);padding:1px 6px;border-radius:4px;font-size:.79rem;word-break:break-all;}
+</style>
+</head>
+<body>
+
+<div class="loading" id="loading" style="display:none">
+  <div class="spinner"></div>
+  <p id="loading-msg">Loading...</p>
+</div>
+
+<header>
+  <div class="hdr-icon">🏨</div>
+  <div class="hdr-text">
+    <h1>Room Attendant<br>Daily Report</h1>
+    <p>HOUSEKEEPING MANAGEMENT</p>
+  </div>
+  <div class="hdr-right" id="hdr-right" style="display:none">
+    <div class="hdr-who" id="hdr-who"></div>
+    <button class="logout-btn" onclick="logout()">Sign Out</button>
+  </div>
+</header>
+
+<div id="login-screen">
+  <div class="login-card">
+    <h2>Welcome Back</h2>
+    <p class="login-sub">Sign in to submit or view your daily report.</p>
+    <div class="login-tabs">
+      <button class="ltab active" onclick="setTab('attendant')">Villa Attendant</button>
+      <button class="ltab" onclick="setTab('manager')">Manager</button>
+    </div>
+    <div id="tab-a">
+      <div class="lf">
+        <label>Select Your Name</label>
+        <select id="sel-name"><option value="">— Loading... —</option></select>
+      </div>
+      <button class="login-btn" onclick="loginAttendant()">Continue →</button>
+    </div>
+    <div id="tab-m" style="display:none">
+      <div class="lf">
+        <label>Manager PIN</label>
+        <input type="password" id="mgr-pin" placeholder="Enter PIN" inputmode="numeric" maxlength="6">
+      </div>
+      <button class="login-btn" onclick="loginManager()">Login as Manager →</button>
+      <p class="pin-hint">Default PIN: <strong>1234</strong></p>
+    </div>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<div id="app-screen">
+
+  <!-- ATTENDANT VIEW -->
+  <div id="view-a">
+    <div class="card" style="margin-top:14px;">
+      <div class="field" style="margin-bottom:0">
+        <label>Date</label>
+        <input type="date" id="meta-date">
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="ci">+</div> Add Villa Entry</div>
+      <div class="r2b">
+        <div class="field"><label>Villa No.</label><input type="text" id="f-villa" placeholder="e.g. 908" inputmode="numeric"></div>
+        <div class="field"><label>Room Status</label>
+          <select id="f-status">
+            <option value="">Select...</option>
+            <option value="OCC">OCC – Occupied</option>
+            <option value="VM">VM – Vacant Make</option>
+            <option value="V/A">V/A – Vacant Available</option>
+            <option value="DND">DND – Do Not Disturb</option>
+            <option value="REF">REF – Refused</option>
+            <option value="NO SHOW">NO SHOW</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Remarks (optional)</label><textarea id="f-remarks" placeholder="Any notes or special instructions…"></textarea></div>
+      <div class="sep">🌅 Morning</div>
+      <div class="r2">
+        <div class="field"><label>IN</label><input type="time" id="f-morn-in"></div>
+        <div class="field"><label>Out</label><input type="time" id="f-morn-out"></div>
+      </div>
+      <div class="sep">🌆 Evening</div>
+      <div class="r2">
+        <div class="field"><label>IN</label><input type="time" id="f-eve-in"></div>
+        <div class="field"><label>Out</label><input type="time" id="f-eve-out"></div>
+      </div>
+      <div class="err-msg" id="err-msg"></div>
+      <button class="btn-add" id="btn-add" onclick="addEntry()">➕ Add Entry</button>
+    </div>
+    <div class="e-header">
+      <h2>My Entries Today</h2>
+      <span class="badge" id="my-count">0</span>
+    </div>
+    <div class="e-body" id="my-body">
+      <div class="empty-state"><div class="em">📋</div><p>No entries yet.</p></div>
+    </div>
+  </div>
+
+  <!-- MANAGER VIEW -->
+  <div id="view-m" style="display:none">
+    <div class="mgr-badge">👔 Manager View — Full Access</div>
+    <div class="mgr-tabs">
+      <button class="mgr-tab active" id="mtab-entries" onclick="setMgrTab('entries')">Entries</button>
+      <button class="mgr-tab" id="mtab-staff" onclick="setMgrTab('staff')">Manage Staff</button>
+    </div>
+
+    <div id="mgr-entries-panel">
+      <div class="date-filter-bar">
+        <label>Date</label>
+        <input type="date" id="mgr-date-filter">
+        <button class="btn-load" onclick="loadManagerEntries()">🔄 Load</button>
+      </div>
+      <div class="fbar" id="filter-bar"></div>
+      <div class="e-header" style="margin-top:14px;">
+        <h2 id="mgr-title">All Entries</h2>
+        <span class="badge" id="mgr-count">0</span>
+      </div>
+      <div class="e-body" id="mgr-body">
+        <div class="empty-state"><div class="em">📅</div><p>Select a date and tap Load.</p></div>
+      </div>
+      <div style="margin:14px 14px 0">
+        <button class="btn-export" id="export-btn" onclick="exportExcel()" disabled>📥 Export to Excel</button>
+        <button class="btn-clear" onclick="clearAll()">🗑 Clear All Entries</button>
+      </div>
+      <div style="margin:10px 14px;color:var(--muted);font-size:.79rem" id="status-note"></div>
+    </div>
+
+    <div id="mgr-staff-panel" style="display:none">
+      <div class="e-header" style="margin-top:14px;">
+        <h2>Villa Attendants</h2>
+        <span class="badge" id="staff-count">0</span>
+      </div>
+      <div class="staff-list-wrap" id="staff-list-body">
+        <div class="empty-state"><div class="em">👤</div><p>Loading...</p></div>
+      </div>
+      <div class="card" style="margin-top:12px;">
+        <div class="card-title"><div class="ci">+</div> Add New Attendant</div>
+        <div class="add-staff-row">
+          <input type="text" id="new-staff-name" placeholder="Full name e.g. Hassan Ali">
+          <button class="add-staff-btn" onclick="addStaff()">+ Add</button>
+        </div>
+        <div class="staff-msg" id="staff-msg"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ================================================================
+//  STEP 1: Replace the URL below with your Google Apps Script URL
+// ================================================================
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycby60-4OD189jxAPzxW0tgzHPEbyCc0o96Dj3ewDHFDjh-MwUMv43hUkMlWjAy9IAtKkhA/exec";
+// ================================================================
+
+var currentUser = null;
+var activeFilter = 'all';
+var currentMgrTab = 'entries';
+var allManagerEntries = [];
+var ATTENDANTS = [];
+const MANAGER_PIN = '1234';
+
+function today(){var d=new Date();return d.getFullYear()+'-'+(''+(d.getMonth()+1)).padStart(2,'0')+'-'+(''+(d.getDate())).padStart(2,'0');}
+function fmtDate(d){if(!d)return '';var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function sClass(s){return ({OCC:'s-occ',VM:'s-vm','V/A':'s-va',REF:'s-ref',DND:'s-dnd','NO SHOW':'s-ns'})[s]||'s-ns';}
+function $(id){return document.getElementById(id);}
+function gval(id){var e=$(id);return e?e.value:'';}
+function showLoading(msg){$('loading-msg').textContent=msg||'Loading...';$('loading').style.display='flex';}
+function hideLoading(){$('loading').style.display='none';}
+function showToast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2600);}
+function isConfigured(){return !!SCRIPT_URL;}
+
+function api(payload,cb){
+  if(!isConfigured()){cb({status:'error',message:'Script URL not set.'});return;}
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)})
+    .then(function(r){return r.json();}).then(cb)
+    .catch(function(e){cb({status:'error',message:e.toString()});});
+}
+function apiGet(params,cb){
+  if(!isConfigured()){cb({status:'error',message:'Script URL not set.'});return;}
+  var qs=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
+  fetch(SCRIPT_URL+'?'+qs)
+    .then(function(r){return r.json();}).then(cb)
+    .catch(function(e){cb({status:'error',message:e.toString()});});
+}
+
+function loadAttendantsForLogin(){
+  if(!isConfigured()){
+    ATTENDANTS=['Ali Ibrahim','Adam Moosa','Sugon Mir','Robel Mia'];
+    populateSelect();
+    showSetupBanner();
+    return;
+  }
+  apiGet({action:'getAttendants'},function(res){
+    if(res.status==='ok'){ATTENDANTS=res.attendants;}
+    else{ATTENDANTS=['Ali Ibrahim','Adam Moosa','Sugon Mir','Robel Mia'];}
+    populateSelect();
+  });
+}
+
+function showSetupBanner(){
+  if($('setup-banner')) return;
+  var b=document.createElement('div');
+  b.id='setup-banner';b.className='setup-banner';
+  b.innerHTML='<strong>⚙️ One-time setup needed</strong>'+
+    'Open this HTML file in a text editor (Notepad, TextEdit, VS Code) and replace <code>PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE</code> with your Google Apps Script Web App URL. Save the file — done!';
+  $('login-screen').appendChild(b);
+}
+
+function populateSelect(){
+  var sel=$('sel-name');
+  if(!sel)return;
+  sel.innerHTML='<option value="">— Choose Attendant —</option>'+ATTENDANTS.map(function(n){return '<option>'+esc(n)+'</option>';}).join('');
+}
+
+function setTab(tab){
+  $('tab-a').style.display=tab==='attendant'?'':'none';
+  $('tab-m').style.display=tab==='manager'?'':'none';
+  document.querySelectorAll('.ltab').forEach(function(b,i){b.classList.toggle('active',tab==='attendant'?i===0:i===1);});
+  $('login-err').textContent='';
+}
+
+function loginAttendant(){
+  var name=gval('sel-name');
+  if(!name){$('login-err').textContent='Please select your name.';return;}
+  currentUser={name:name,role:'attendant'};openApp();
+}
+function loginManager(){
+  if(gval('mgr-pin')!==MANAGER_PIN){$('login-err').textContent='Incorrect PIN. Try 1234.';return;}
+  currentUser={name:'Manager',role:'manager'};openApp();
+}
+
+function openApp(){
+  $('login-screen').style.display='none';
+  $('app-screen').style.display='';
+  $('hdr-right').style.display='';
+  $('hdr-who').textContent=currentUser.name;
+  $('meta-date').value=today();
+  if(currentUser.role==='manager'){
+    $('view-a').style.display='none';$('view-m').style.display='';
+    $('mgr-date-filter').value=today();
+    setMgrTab('entries');loadManagerEntries();
+  } else {
+    $('view-a').style.display='';$('view-m').style.display='none';
+    loadMyEntries();
+  }
+}
+
+function logout(){
+  currentUser=null;activeFilter='all';currentMgrTab='entries';allManagerEntries=[];
+  $('login-screen').style.display='flex';$('app-screen').style.display='none';$('hdr-right').style.display='none';
+  $('mgr-pin').value='';$('login-err').textContent='';
+  setTab('attendant');loadAttendantsForLogin();
+}
+
+function setMgrTab(tab){
+  currentMgrTab=tab;
+  $('mtab-entries').classList.toggle('active',tab==='entries');
+  $('mtab-staff').classList.toggle('active',tab==='staff');
+  $('mgr-entries-panel').style.display=tab==='entries'?'':'none';
+  $('mgr-staff-panel').style.display=tab==='staff'?'':'none';
+  if(tab==='staff')loadStaff();
+}
+
+function addEntry(){
+  var villa=gval('f-villa').trim(),status=gval('f-status'),date=gval('meta-date')||today();
+  var err=$('err-msg');
+  if(!villa){err.textContent='Please enter Villa Number.';return;}
+  if(!status){err.textContent='Please select Room Status.';return;}
+  err.textContent='';
+  var btn=$('btn-add');btn.disabled=true;btn.textContent='Saving...';
+  showLoading('Saving entry...');
+  api({action:'submitEntry',attendant:currentUser.name,date:date,villa:villa,status:status,
+    remarks:gval('f-remarks').trim(),mornIn:gval('f-morn-in'),mornOut:gval('f-morn-out'),
+    eveIn:gval('f-eve-in'),eveOut:gval('f-eve-out')},
+    function(res){
+      hideLoading();btn.disabled=false;btn.innerHTML='➕ Add Entry';
+      if(res.status==='ok'){
+        ['f-villa','f-status','f-remarks','f-morn-in','f-morn-out','f-eve-in','f-eve-out'].forEach(function(id){$(id).value='';});
+        $('f-villa').focus();showToast('✅ Entry saved!');loadMyEntries();
+      } else {err.textContent='Error: '+(res.message||'Could not save.');}
+    });
+}
+
+function loadMyEntries(){
+  var date=gval('meta-date')||today();
+  showLoading('Loading your entries...');
+  apiGet({action:'getEntries',date:date,attendant:currentUser.name},function(res){
+    hideLoading();
+    if(res.status==='ok'){renderMyEntries(res.entries||[]);}
+    else{$('my-body').innerHTML='<div class="empty-state"><div class="em">⚠️</div><p>Could not load. Check your connection.</p></div>';}
+  });
+}
+
+function renderMyEntries(entries){
+  $('my-count').textContent=entries.length;
+  $('my-body').innerHTML=entries.length
+    ?entries.map(function(e){return entryCard(e,false);}).join('')
+    :'<div class="empty-state"><div class="em">📋</div><p>No entries yet for today.</p></div>';
+}
+
+function loadManagerEntries(){
+  var date=gval('mgr-date-filter')||today();
+  showLoading('Loading entries for '+fmtDate(date)+'...');
+  apiGet({action:'getEntries',date:date},function(res){
+    hideLoading();
+    if(res.status==='ok'){allManagerEntries=res.entries||[];activeFilter='all';renderManagerEntries();}
+    else{$('mgr-body').innerHTML='<div class="empty-state"><div class="em">⚠️</div><p>Could not load entries.</p></div>';}
+  });
+}
+
+function renderManagerEntries(){
+  var allFilters=['all'].concat(ATTENDANTS);
+  $('filter-bar').innerHTML=allFilters.map(function(f){
+    return '<button class="fc'+(activeFilter===f?' active':'')+'" onclick="setFilter(\''+f.replace(/'/g,"\\'")+'\')">'+
+      (f==='all'?'All Staff':esc(f))+'</button>';
+  }).join('');
+  var filtered=activeFilter==='all'?allManagerEntries:allManagerEntries.filter(function(e){return e.attendant===activeFilter;});
+  var sorted=filtered.slice().sort(function(a,b){return a.attendant.localeCompare(b.attendant);});
+  $('mgr-count').textContent=filtered.length;
+  $('mgr-title').textContent=activeFilter==='all'?'All Entries':activeFilter;
+  $('export-btn').disabled=filtered.length===0;
+  $('mgr-body').innerHTML=sorted.length
+    ?sorted.map(function(e){return entryCard(e,true);}).join('')
+    :'<div class="empty-state"><div class="em">📋</div><p>No entries for this date.</p></div>';
+}
+
+function setFilter(f){activeFilter=f;renderManagerEntries();}
+
+function entryCard(e,showWho){
+  return '<div class="eitem">'+
+    '<div class="etop"><div><div class="evilla">Villa '+esc(e.villa)+'</div>'+(showWho?'<div class="ewho">'+esc(e.attendant)+'</div>':'')+
+    '</div><span class="estatus '+sClass(e.status)+'">'+esc(e.status)+'</span></div>'+
+    '<div class="etimes">'+
+    '<div class="tb"><div class="tbl">🌅 Morning</div><div class="tbv">'+(e.mornIn||'—')+' → '+(e.mornOut||'—')+'</div></div>'+
+    '<div class="tb"><div class="tbl">🌆 Evening</div><div class="tbv">'+(e.eveIn||'—')+' → '+(e.eveOut||'—')+'</div></div>'+
+    '</div>'+(e.remarks?'<div class="eremarks"><b>Remarks:</b> '+esc(e.remarks)+'</div>':'')+
+    '<div class="efoot"><span class="edate">'+fmtDate(e.date)+'</span>'+
+    '<button class="del-btn" onclick="deleteEntry(\''+esc(e.id)+'\')">✕ Remove</button></div>'+
+    '</div>';
+}
+
+function deleteEntry(id){
+  if(!confirm('Remove this entry?'))return;
+  showLoading('Removing...');
+  api({action:'deleteEntry',id:id},function(res){
+    hideLoading();
+    if(res.status==='ok'){showToast('Entry removed.');if(currentUser.role==='manager')loadManagerEntries();else loadMyEntries();}
+    else{showToast('Error: could not remove.');}
+  });
+}
+
+function clearAll(){
+  if(!confirm('Clear ALL entries from Google Sheets? This cannot be undone.'))return;
+  showLoading('Clearing all entries...');
+  api({action:'clearAll'},function(res){
+    hideLoading();
+    if(res.status==='ok'){allManagerEntries=[];renderManagerEntries();showToast('All entries cleared.');}
+  });
+}
+
+function loadStaff(){
+  showLoading('Loading staff...');
+  apiGet({action:'getAttendants'},function(res){
+    hideLoading();
+    if(res.status==='ok'){ATTENDANTS=res.attendants;renderStaff();}
+  });
+}
+
+function renderStaff(){
+  $('staff-count').textContent=ATTENDANTS.length;
+  $('staff-list-body').innerHTML=ATTENDANTS.length
+    ?ATTENDANTS.map(function(name){
+      return '<div class="staff-item">'+
+        '<div class="staff-name">'+esc(name)+'</div>'+
+        '<button class="del-btn" onclick="deleteStaff(\''+esc(name)+'\')">✕ Remove</button></div>';
+    }).join('')
+    :'<div class="empty-state"><div class="em">👤</div><p>No attendants yet.</p></div>';
+}
+
+function addStaff(){
+  var name=gval('new-staff-name').trim(),msg=$('staff-msg');
+  if(!name){msg.className='staff-msg err';msg.textContent='Please enter a name.';return;}
+  showLoading('Adding attendant...');
+  api({action:'addAttendant',name:name},function(res){
+    hideLoading();
+    if(res.status==='ok'){
+      $('new-staff-name').value='';
+      msg.className='staff-msg ok';msg.textContent='✅ '+name+' added.';
+      showToast('✅ '+name+' added!');loadStaff();
+    } else {msg.className='staff-msg err';msg.textContent=res.message||'Could not add.';}
+  });
+}
+
+function deleteStaff(name){
+  if(!confirm('Remove '+name+' from the attendant list?'))return;
+  showLoading('Removing...');
+  api({action:'deleteAttendant',name:name},function(res){
+    hideLoading();
+    if(res.status==='ok'){showToast(name+' removed.');loadStaff();}
+    else{showToast('Error: could not remove.');}
+  });
+}
+
+function exportExcel(){
+  var date=gval('mgr-date-filter')||today();
+  var filtered=activeFilter==='all'?allManagerEntries:allManagerEntries.filter(function(e){return e.attendant===activeFilter;});
+  if(!filtered.length)return;
+  var rows=[
+    ['Room Attendant Daily Report — '+fmtDate(date),'','','','','','','',''],
+    ['Villa Attendant','Date','Villa Number','Room Status','Remarks','Morning','','Evening',''],
+    ['','','','','','IN','Out','IN','Out']
+  ];
+  filtered.forEach(function(e){rows.push([e.attendant,fmtDate(e.date),e.villa,e.status,e.remarks||'',e.mornIn||'',e.mornOut||'',e.eveIn||'',e.eveOut||'']);});
+  var ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:20},{wch:12},{wch:13},{wch:13},{wch:28},{wch:11},{wch:11},{wch:11},{wch:11}];
+  ws['!merges']=[
+    {s:{r:0,c:0},e:{r:0,c:8}},{s:{r:1,c:5},e:{r:1,c:6}},{s:{r:1,c:7},e:{r:1,c:8}},
+    {s:{r:1,c:0},e:{r:2,c:0}},{s:{r:1,c:1},e:{r:2,c:1}},{s:{r:1,c:2},e:{r:2,c:2}},
+    {s:{r:1,c:3},e:{r:2,c:3}},{s:{r:1,c:4},e:{r:2,c:4}}
+  ];
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Daily Report');
+  XLSX.writeFile(wb,'Room_Attendant_Report_'+date+'.xlsx');
+  $('status-note').textContent='✅ Exported '+filtered.length+' entries for '+fmtDate(date)+'.';
+  showToast('📥 Excel downloaded!');
+}
+
+$('meta-date').addEventListener('change',function(){loadMyEntries();});
+$('mgr-pin').addEventListener('keydown',function(e){if(e.key==='Enter')loginManager();});
+$('new-staff-name').addEventListener('keydown',function(e){if(e.key==='Enter')addStaff();});
+loadAttendantsForLogin();
+</script>
+</body>
+</html>
