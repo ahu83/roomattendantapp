@@ -350,16 +350,16 @@ function loginManager(){
 
 function openApp(){
   $('login-screen').style.display='none';
-  $('app-screen').style.display='';
-  $('hdr-right').style.display='';
+  $('app-screen').style.display='block';
+  $('hdr-right').style.display='flex';
   $('hdr-who').textContent=currentUser.name;
   $('meta-date').value=today();
   if(currentUser.role==='manager'){
-    $('view-a').style.display='none';$('view-m').style.display='';
+    $('view-a').style.display='none';$('view-m').style.display='block';
     $('mgr-date-filter').value=today();
     setMgrTab('entries');loadManagerEntries();
   } else {
-    $('view-a').style.display='';$('view-m').style.display='none';
+    $('view-a').style.display='block';$('view-m').style.display='none';
     loadMyEntries();
   }
 }
