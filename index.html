@@ -11,20 +11,21 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html{overflow-x:hidden;}
 body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden;}
+body.on-login{height:100vh;height:100dvh;overflow:hidden;}
 .logo-bg{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url('Madifushi-wave-mark-teal.png');background-repeat:no-repeat;background-position:20% 110%;background-size:100% auto;opacity:.32;}
-header{background:var(--white);padding:12px 18px;display:flex;align-items:center;min-height:96px;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);box-shadow:0 2px 3px rgba(37,55,70,.04);}
+header{background:var(--white);padding:8px 18px;display:flex;align-items:center;min-height:80px;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);box-shadow:0 2px 3px rgba(37,55,70,.04);}
 
 .hdr-logo-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none;}
-.hdr-logo-center img{height:72px;width:auto;display:block;}
+.hdr-logo-center img{height:58px;width:auto;display:block;}
 .hdr-logo-center span{font-size:.6rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-top:5px;white-space:nowrap;}
 .hdr-right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;position:relative;z-index:1;}
 .hdr-who{color:var(--navy);font-size:.71rem;font-weight:600;}
 .logout-btn{background:var(--cream);border:1px solid var(--border);color:var(--navy);border-radius:6px;padding:4px 10px;font-size:.68rem;cursor:pointer;font-family:inherit;}
-#login-screen{min-height:calc(100vh - 96px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px;position:relative;z-index:1;}
-.login-card{background:var(--white);border:1px solid var(--border);border-radius:18px;padding:28px 22px;width:100%;max-width:380px;box-shadow:0 4px 28px rgba(15,33,64,.11);}
+#login-screen{min-height:calc(100vh - 80px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 18px;position:relative;z-index:1;}
+.login-card{background:var(--white);border:1px solid var(--border);border-radius:18px;padding:20px 20px;width:100%;max-width:380px;box-shadow:0 4px 28px rgba(15,33,64,.11);}
 .login-card h2{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--navy);margin-bottom:5px;}
-.login-sub{color:var(--muted);font-size:.83rem;margin-bottom:24px;}
-.login-tabs{display:flex;background:var(--cream);border-radius:10px;padding:4px;margin-bottom:22px;}
+.login-sub{color:var(--muted);font-size:.83rem;margin-bottom:14px;}
+.login-tabs{display:flex;background:var(--cream);border-radius:10px;padding:4px;margin-bottom:12px;}
 .ltab{flex:1;min-width:0;padding:9px 3px;text-align:center;border-radius:7px;font-size:.78rem;font-weight:600;cursor:pointer;border:none;background:none;color:var(--muted);font-family:inherit;transition:all .2s;line-height:1.2;}
 .ltab.active{background:var(--accent);color:var(--navy);}
 .lf{margin-bottom:14px;}
@@ -150,7 +151,7 @@ footer p {
    have none, so bleed the heading edge-to-edge and re-pad it to line up with those rows. */
 #mb-items-list .mb-group-heading{margin:0 -16px;padding-left:16px;padding-right:16px;}
 @media (max-width:380px){.ltab,.mgr-tab{font-size:.68rem;padding:9px 2px;}}
-.dash-quicklink{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:20px;background:none;border:1.5px solid var(--border);color:var(--muted);border-radius:10px;padding:11px;font-size:.83rem;font-weight:700;cursor:pointer;font-family:inherit;}
+.dash-quicklink{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:12px;background:none;border:1.5px solid var(--border);color:var(--muted);border-radius:10px;padding:10px;font-size:.83rem;font-weight:700;cursor:pointer;font-family:inherit;}
 .dash-quicklink svg{width:15px;height:15px;flex-shrink:0;}
 
 /* ── DASHBOARD (light theme, matches rest of app) ── */
@@ -227,7 +228,7 @@ footer p {
 
 </style>
 </head>
-<body>
+<body class="on-login">
 
 <div class="logo-bg" aria-hidden="true"></div>
 
@@ -876,6 +877,7 @@ function loginMinibar(){
 }
 
 function openApp(){
+  document.body.classList.remove('on-login');
   $('login-screen').style.display='none';
   $('app-screen').style.display='block';
   $('hdr-right').style.display='flex';
@@ -901,6 +903,7 @@ function openApp(){
 }
 
 function logout(){
+  document.body.classList.add('on-login');
   currentUser=null;activeFilter='all';currentMgrTab='entries';allManagerEntries=[];
   mbActiveFilter='Pending';allMinibarRequests=[];
   $('login-screen').style.display='flex';$('app-screen').style.display='none';$('hdr-right').style.display='none';
@@ -912,6 +915,7 @@ function logout(){
 
 // ── DASHBOARD navigation (reachable only from the login screen, never while logged in) ──
 function viewDashboardAnonymous(){
+  document.body.classList.remove('on-login');
   currentUser={name:'Dashboard',role:'dashboard'};
   $('login-screen').style.display='none';
   $('app-screen').style.display='block';
