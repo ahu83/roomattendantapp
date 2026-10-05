@@ -308,7 +308,10 @@ footer p {
     <div class="card" style="margin-top:14px;">
       <div class="field" style="margin-bottom:0">
         <label>Date</label>
-        <input type="date" id="meta-date">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input type="date" id="meta-date" style="flex:1;">
+          <button class="btn-load" onclick="loadMyEntries()">🔄 Load</button>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -348,7 +351,7 @@ footer p {
       <span class="badge" id="my-count">0</span>
     </div>
     <div class="e-body" id="my-body">
-      <div class="empty-state"><div class="em">📋</div><p>No entries yet.</p></div>
+      <div class="empty-state"><div class="em">📅</div><p>Tap Load to see your entries for this date.</p></div>
     </div>
   </div>
 
@@ -898,7 +901,7 @@ function openApp(){
   } else {
     $('view-a').style.display='block';
     $('meta-date').value=today();
-    loadMyEntries();
+    resetMyEntries();
   }
 }
 
@@ -973,7 +976,7 @@ function addEntry(){
       hideLoading();btn.disabled=false;btn.innerHTML='➕ Add Entry';
       if(res.status==='ok'){
         ['f-villa','f-status','f-remarks','f-morn-in','f-morn-out','f-eve-in','f-eve-out'].forEach(function(id){$(id).value='';});
-        $('f-villa').focus();showToast('✅ Entry saved!');loadMyEntries();
+        $('f-villa').focus();showToast('✅ Entry saved!');markMyEntriesStale();
       } else {err.textContent='Error: '+(res.message||'Could not save.');showToast('❌ Error: '+(res.message||'Could not save.'));}
     });
 }
@@ -987,7 +990,25 @@ function loadMyEntries(){
   });
 }
 
+// Entries are only fetched when the attendant taps Load (keeps entry fast).
+var myEntries=[],myEntriesLoaded=false;
+function myEmptyState(icon,msg){return '<div class="empty-state"><div class="em">'+icon+'</div><p>'+msg+'</p></div>';}
+function resetMyEntries(){
+  myEntries=[];myEntriesLoaded=false;
+  $('my-count').textContent='–';
+  $('my-body').innerHTML=myEmptyState('📅','Tap Load to see your entries for this date.');
+}
+function markMyEntriesStale(){
+  // New entry saved — don't re-read the database; just let the attendant know the list is out of date.
+  if(!myEntriesLoaded)return;
+  var hint=$('my-stale-hint');
+  if(!hint){
+    $('my-body').insertAdjacentHTML('afterbegin','<div id="my-stale-hint" class="empty-state" style="padding:10px;"><p>New entries saved. Tap Load to refresh this list.</p></div>');
+  }
+}
+
 function renderMyEntries(entries){
+  myEntries=entries;myEntriesLoaded=true;
   $('my-count').textContent=entries.length;
   $('my-body').innerHTML=entries.length
     ?entries.map(function(e){return entryCard(e,false);}).join('')
@@ -1077,7 +1098,7 @@ function deleteEntry(id){
   if(!confirm('Remove this entry?'))return;
   showLoading('Removing...');
   api({action:'deleteEntry',id:id},function(res){
-    if(res.status==='ok'){showToast('Entry removed.');if(currentUser.role==='manager')loadManagerEntries();else loadMyEntries();}
+    if(res.status==='ok'){showToast('Entry removed.');if(currentUser.role==='manager')loadManagerEntries();else{var hadHint=!!$('my-stale-hint');renderMyEntries(myEntries.filter(function(e){return String(e.id)!==String(id);}));if(hadHint)markMyEntriesStale();}}
     else{showToast('Error: could not remove.');}
   });
 }
@@ -1844,7 +1865,7 @@ function exportExcel(){
   showToast('📥 Excel downloaded!');
 }
 
-$('meta-date').addEventListener('change',function(){loadMyEntries();});
+$('meta-date').addEventListener('change',function(){resetMyEntries();});
 $('mbreq-date').addEventListener('change',function(){loadMyMinibarRequests();});
 $('mgr-pin').addEventListener('keydown',function(e){if(e.key==='Enter')loginManager();});
 $('mb-pin').addEventListener('keydown',function(e){if(e.key==='Enter')loginMinibar();});
